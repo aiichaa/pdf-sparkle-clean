@@ -76,7 +76,7 @@ export const TOOLS: ToolInfo[] = [
     slug: "ocr",
     title: "OCR: make searchable",
     description:
-      "Turn scanned pages into searchable, selectable text (English, French, Spanish, German).",
+      "Turn scanned pages into searchable, selectable text (English, French, Spanish, German, Arabic).",
     action: "Make searchable",
   },
   {

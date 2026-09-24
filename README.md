@@ -16,7 +16,7 @@ Live: <https://pdf.aiichaa.com>
 | **Add page numbers** | Six positions, `1` / `1 / N` / `Page 1 of N`, start number, size, and an option to skip the cover. Stays upright on rotated pages |
 | **Add watermark** | Diagonal or horizontal text, colour, size and opacity, with a live preview |
 | **Compress PDF** | Three levels: **Recommended** (images capped at 2000 px, JPEG q75), **Strong** (1400 px, q60) and **Lossless**. It always removes unreferenced objects, deflates uncompressed streams and uses object streams. The file only downloads if it actually got smaller |
-| **OCR: make searchable** | Scanned pages are read by **Tesseract 5** (tesseract.js, WASM, in a web worker) at 300 DPI. English, French, Spanish and German, combinable. The words go in as an **invisible text layer** (render mode 3), line by line, on the scan's baseline and skew. The page looks exactly the same, but you can search, select and copy it. Pages that already have text are skipped by default. You can also download the recognised text as `.txt`, and cancel at any time. Keeps the document. The layer uses WinAnsi, so non-Latin scripts aren't supported yet |
+| **OCR: make searchable** | Scanned pages are read by **Tesseract 5** (tesseract.js, WASM, in a web worker) at 300 DPI. English, French, Spanish, German and **Arabic**, combinable (e.g. Arabic + French). The words go in as an **invisible text layer** (render mode 3), line by line, on the scan's baseline and skew. The page looks exactly the same, but you can search, select and copy it. Pages that already have text are skipped by default. You can also download the recognised text as `.txt`, and cancel at any time. Keeps the document. The layer uses a glyphless Unicode font (as Tesseract's own PDF renderer does), so any script extracts exactly. Arabic is written in visual order, the convention PDF readers expect, so search and copy return it in reading order, numbers included. Specks and misreads are filtered per line (by confidence, script and size) |
 | **Fill PDF forms** | Text (single- and multi-line, with length limits), checkboxes, radio buttons, dropdowns and list boxes. Each page is shown with its fields outlined, and clicking a box jumps to its input (this works on rotated pages too). Read-only fields are respected. Optional **flatten** makes the answers part of the page. Keeps the document. Text uses the form's standard font (WinAnsi), so non-Latin scripts are flagged before saving |
 | **Sign PDF** | **Visual** signature, drawn (mouse, touch or pen, with smooth pressure-aware strokes), typed (Dancing Script / Great Vibes / Caveat, bundled locally) or uploaded (photos with the white paper background removed). Click to place, drag to move, pull the corner to resize (aspect kept), arrow keys and +/- work too, and it can be copied to every page. Upright on rotated pages. Keeps the document. Not a certificate-based digital signature, and the signature is never stored |
 | **Sign with certificate** | A **verifiable digital signature** (CMS `adbe.pkcs7.detached`, SHA-256) made with your own `.p12` / `.pfx` (RSA). Alternatively, create a self-signed certificate right in the browser (RSA-2048, 3 years, downloaded as a password-protected `.p12`). Optional reason, location and contact. The signature is appended as an **incremental update**, so earlier signatures stay valid. Readers flag any later change. Self-signed certificates show "identity unknown" until the recipient trusts them. The certificate and key are never uploaded or stored |
@@ -81,7 +81,7 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment
 ## Roadmap
 
 - **Phase 2:** ~~Protect / Unlock~~, ~~Compress~~, ~~Fill forms~~, ~~Sign (visual)~~, ~~Sign with certificate~~: all done.
-- ~~OCR (make scanned PDFs searchable)~~: done. Maybe later: Arabic OCR (needs an embedded Unicode font and RTL), automatic page orientation.
+- ~~OCR (make scanned PDFs searchable)~~, ~~Arabic OCR~~: done. Maybe later: automatic page orientation, more languages.
 - **Not planned:** Office ↔ PDF conversion. It needs a server, which would break the “never uploaded” promise.
 
 ## Dependencies
@@ -92,7 +92,7 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment
 - [`@dnd-kit`](https://dndkit.com) (MIT): accessible drag and drop
 - [`fflate`](https://github.com/101arrowz/fflate) (MIT): zip output and Flate streams
 - [`node-forge`](https://github.com/digitalbazaar/forge) (BSD-3 / GPL-2 dual): PKCS#12 reading and writing, X.509, CMS SignedData
-- [`tesseract.js`](https://github.com/naptha/tesseract.js) + `tesseract.js-core` (Apache-2.0) and `@tesseract.js-data/{eng,fra,spa,deu}` (Apache-2.0, tessdata_best int models): OCR, served from our own origin
+- [`tesseract.js`](https://github.com/naptha/tesseract.js) + `tesseract.js-core` (Apache-2.0) and `@tesseract.js-data/{eng,fra,spa,deu,ara}` (Apache-2.0, tessdata_best int models): OCR, served from our own origin
 - `@fontsource/dancing-script`, `@fontsource/great-vibes`, `@fontsource/caveat` (OFL-1.1): handwriting fonts for typed signatures, served from our own origin
 
 ## License

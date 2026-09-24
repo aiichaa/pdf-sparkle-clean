@@ -6,15 +6,12 @@
 import Tesseract from "tesseract.js/dist/tesseract.esm.min.js";
 import type { PDFDocumentProxy } from "./render";
 import { pageHasText, renderPageToCanvas } from "./render";
-import type { OcrLine, OcrPage } from "./ocr";
+import { keepWords, type OcrLine, type OcrPage } from "./ocr";
 
-export type OcrLanguage = "eng" | "fra" | "spa" | "deu";
+export type OcrLanguage = "eng" | "fra" | "spa" | "deu" | "ara";
 
 /** 300 DPI is Tesseract's sweet spot for body text. */
 const OCR_DPI = 300;
-/** Words below this Tesseract confidence (0–100) are left out of the text layer. */
-const MIN_CONFIDENCE = 40;
-const MIN_SYMBOL_CONFIDENCE = 85;
 
 export interface OcrProgress {
   /** 1-based page being processed */
@@ -54,13 +51,7 @@ function linesFromBlocks(blocks: TBlock[] | null): { lines: OcrLine[]; conf: num
   for (const b of blocks ?? []) {
     for (const p of b.paragraphs) {
       for (const l of p.lines) {
-        // Specks and rules come out as low-confidence punctuation: drop them, but keep
-        // confident dashes, quotes and symbols.
-        const words = l.words.filter((w) =>
-          /[\p{L}\p{N}]/u.test(w.text)
-            ? w.confidence >= MIN_CONFIDENCE
-            : w.confidence >= MIN_SYMBOL_CONFIDENCE && w.text.trim().length > 0,
-        );
+        const words = keepWords(l.words);
         if (!words.length) continue;
         conf.push(...words.map((w) => w.confidence));
         lines.push({

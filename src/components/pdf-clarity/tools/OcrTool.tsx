@@ -18,6 +18,7 @@ const LANGUAGES: { id: OcrLanguage; label: string }[] = [
   { id: "fra", label: "French" },
   { id: "spa", label: "Spanish" },
   { id: "deu", label: "German" },
+  { id: "ara", label: "Arabic (العربية)" },
 ];
 
 interface Summary {
@@ -241,8 +242,8 @@ export function OcrTool() {
           <p>
             It takes a few seconds per page. The first run loads the OCR engine and language data
             (about 4 MB plus 1–3 MB per language) from this site. Accuracy depends on the scan:
-            straight, sharp pages at 300 DPI work best. Non-Latin characters can't be added to the
-            layer yet.
+            straight, sharp pages at 300 DPI work best. Arabic text is searchable and copies in the
+            right order.
           </p>
         </div>
       </div>

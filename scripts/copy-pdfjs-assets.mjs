@@ -38,7 +38,7 @@ for (const f of readdirSync(join("node_modules", "tesseract.js-core"))) {
     cpSync(join("node_modules", "tesseract.js-core", f), join(ocr, "core", f));
   }
 }
-for (const lang of ["eng", "fra", "spa", "deu"]) {
+for (const lang of ["eng", "fra", "spa", "deu", "ara"]) {
   const file = `${lang}.traineddata.gz`;
   cpSync(
     join("node_modules", "@tesseract.js-data", lang, "4.0.0_best_int", file),
