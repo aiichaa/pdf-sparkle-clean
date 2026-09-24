@@ -9,7 +9,8 @@ export type ToolSlug =
   | "watermark"
   | "protect"
   | "unlock"
-  | "compress";
+  | "compress"
+  | "fill-forms";
 
 export interface ToolInfo {
   slug: ToolSlug;
@@ -67,6 +68,12 @@ export const TOOLS: ToolInfo[] = [
     title: "Compress PDF",
     description: "Make PDFs smaller by optimizing images and removing leftover data.",
     action: "Compress PDF",
+  },
+  {
+    slug: "fill-forms",
+    title: "Fill PDF forms",
+    description: "Type into a PDF's fillable fields, tick boxes, and lock the answers.",
+    action: "Save filled PDF",
   },
   {
     slug: "protect",

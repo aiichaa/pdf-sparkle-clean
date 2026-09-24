@@ -37,6 +37,10 @@ Bun is not installed on the host. Run it through Docker:
   - An image is replaced only if the result is ≥10% smaller. After replacing, the dictionary is rewritten: `DCTDecode`, `DeviceRGB`, 8 bpc, new Width/Height, `DecodeParms` removed.
   - The candidate filter (`imageCandidate`) is the safety net. Keep it strict: RGB/Gray-family colour spaces only, no `/Decode`, `/Mask` or stencil masks, a single DCT or Flate (8 bpc, PNG predictors 10–15) filter, and at most 40 MP.
   - The browser encoder must keep `imageOrientation: "none"` and `colorSpaceConversion: "none"`.
+- **Forms** `src/lib/pdf/forms.ts`:
+  - `readForm` loads with `preserveXFA: true` (to detect XFA) and returns fields with their widget page and rect. `fillForm` loads normally, which strips XFA so every reader shows the AcroForm values. Read-only fields are never written.
+  - `needsReadableSize()` sets multiline fields to 10pt when their DA size is auto (0) or baked above 24pt. Otherwise pdf-lib renders one giant word.
+  - UI: `FormPage` draws a page plus field outlines using `viewport.convertToViewportPoint` (correct with `/Rotate`). The boxes are memoised per form so typing doesn't re-render the canvases.
 - **Components** `src/components/pdf-clarity/`:
   - `ToolFrame`: the tool header, plus a sidebar with options and the primary action.
   - `FileDrop`, `Thumbnails` (`PageThumb`, `ImageThumb`: lazy canvas rendering), `SortableGrid` (dnd-kit with readable announcements), `controls` (`Segmented`, `Field`).

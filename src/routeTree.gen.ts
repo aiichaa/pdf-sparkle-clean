@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompressRouteImport } from './routes/compress'
+import { Route as FillFormsRouteImport } from './routes/fill-forms'
 import { Route as ImagesToPdfRouteImport } from './routes/images-to-pdf'
 import { Route as MergeRouteImport } from './routes/merge'
 import { Route as OrganizeRouteImport } from './routes/organize'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const CompressRoute = CompressRouteImport.update({
   id: '/compress',
   path: '/compress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FillFormsRoute = FillFormsRouteImport.update({
+  id: '/fill-forms',
+  path: '/fill-forms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImagesToPdfRoute = ImagesToPdfRouteImport.update({
@@ -80,6 +86,7 @@ const WatermarkRoute = WatermarkRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compress': typeof CompressRoute
+  '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
   '/organize': typeof OrganizeRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compress': typeof CompressRoute
+  '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
   '/organize': typeof OrganizeRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/compress': typeof CompressRoute
+  '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
   '/organize': typeof OrganizeRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/compress'
+    | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
     | '/organize'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/compress'
+    | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
     | '/organize'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/compress'
+    | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
     | '/organize'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompressRoute: typeof CompressRoute
+  FillFormsRoute: typeof FillFormsRoute
   ImagesToPdfRoute: typeof ImagesToPdfRoute
   MergeRoute: typeof MergeRoute
   OrganizeRoute: typeof OrganizeRoute
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/compress'
       fullPath: '/compress'
       preLoaderRoute: typeof CompressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fill-forms': {
+      id: '/fill-forms'
+      path: '/fill-forms'
+      fullPath: '/fill-forms'
+      preLoaderRoute: typeof FillFormsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/images-to-pdf': {
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompressRoute: CompressRoute,
+  FillFormsRoute: FillFormsRoute,
   ImagesToPdfRoute: ImagesToPdfRoute,
   MergeRoute: MergeRoute,
   OrganizeRoute: OrganizeRoute,
