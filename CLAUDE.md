@@ -24,7 +24,7 @@ Bun is not installed on the host. Run it through Docker:
 
 ## Architecture
 
-- **Routes** (`src/routes/`): `/` shows the tool grid; `/merge`, `/split`, `/organize`, `/images-to-pdf`, `/pdf-to-images`, `/page-numbers`, `/watermark`, `/protect` and `/unlock` are the tools. `UnlockTool` doesn't use pdf.js, since encrypted files can't be previewed without the password. Each route sets its own `<head>` via `lib/pdf/seo.ts`. `__root.tsx` wraps every route in `AppShell` (header, footer, theme, Ko-fi button, toaster).
+- **Routes** (`src/routes/`): `/` shows the tool grid; `/merge`, `/split`, `/organize`, `/images-to-pdf`, `/pdf-to-images`, `/page-numbers`, `/watermark`, `/compress`, `/fill-forms`, `/sign`, `/digital-sign`, `/protect` and `/unlock` are the tools. `UnlockTool` doesn't use pdf.js, since encrypted files can't be previewed without the password. Each route sets its own `<head>` via `lib/pdf/seo.ts`. `__root.tsx` wraps every route in `AppShell` (header, footer, theme, Ko-fi button, toaster).
 - **Tool catalogue** `src/lib/pdf/tools.ts`: the single source for titles, descriptions and button labels.
 - **Lib** `src/lib/pdf/`:
   - `ops.ts`: **pure** pdf-lib operations (merge, split, organize, imagesToPdf, addPageNumbers, addWatermark, protectPdf, unlockPdf, encryptionKind), unit-tested.
@@ -46,6 +46,12 @@ Bun is not installed on the host. Run it through Docker:
   - The signature is a trimmed transparent PNG, embedded once and drawn per placement.
   - Previews use `data:` URLs, which CSP `img-src` allows. The handwriting fonts load as same-origin woff2 through `FontFace`.
   - **Never persist the signature** (no localStorage).
+- **Sign with certificate** `src/lib/pdf/digital-sign.ts` (pure, node-forge) + `digital-sign-browser.ts` (WebCrypto RSA key generation → forge keys):
+  - Two steps: `withPlaceholder` adds an invisible `/FT /Sig` widget plus a `/Sig` dict with a `/ByteRange [0 /********** ×3]` and a zeroed 16 KB `/Contents`. It saves **incrementally** (`forIncrementalUpdate`, `useObjectStreams: false`, so the placeholders stay literal). `embedSignature` then patches the ByteRange in place, hashes the two ranges and writes a detached CMS SignedData (sha256; contentType, messageDigest and signingTime attributes).
+  - RSA only: node-forge can't decode EC keys, and readP12 says so.
+  - **UTF-8 names:** forge parses UTF8String values as raw bytes but re-encodes them when it rebuilds a name (the signer's issuerAndSerialNumber). `normalizeNames()` decodes them once. Without it, an accented CN (e.g. "Aïcha") gives an invalid signature. Tests check the issuer bytes.
+  - Tests use OpenSSL-made `.p12` fixtures (`__tests__/p12-fixtures.ts`, password `test123`) and verify byte ranges, digest, RSA signature and issuer bytes independently. The e2e is checked with poppler `pdfsig`.
+  - **Never persist the certificate, key or password.**
 - **Rendering queue:** `renderThumbnail` serialises renders per canvas (a WeakMap chain). pdf.js throws if two `render()` calls hit the same canvas, which happened when a ResizeObserver re-rendered during the first paint. Keep all page painting going through it.
 - **Components** `src/components/pdf-clarity/`:
   - `ToolFrame`: the tool header, plus a sidebar with options and the primary action.

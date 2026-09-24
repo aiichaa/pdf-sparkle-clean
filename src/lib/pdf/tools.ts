@@ -11,7 +11,8 @@ export type ToolSlug =
   | "unlock"
   | "compress"
   | "fill-forms"
-  | "sign";
+  | "sign"
+  | "digital-sign";
 
 export interface ToolInfo {
   slug: ToolSlug;
@@ -81,6 +82,12 @@ export const TOOLS: ToolInfo[] = [
     title: "Sign PDF",
     description: "Draw, type or upload your signature and place it on any page.",
     action: "Sign PDF",
+  },
+  {
+    slug: "digital-sign",
+    title: "Sign with certificate",
+    description: "Add a verifiable digital signature with your own .p12 / .pfx certificate.",
+    action: "Sign with certificate",
   },
   {
     slug: "protect",

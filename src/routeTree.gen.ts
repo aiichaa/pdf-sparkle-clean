@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompressRouteImport } from './routes/compress'
+import { Route as DigitalSignRouteImport } from './routes/digital-sign'
 import { Route as FillFormsRouteImport } from './routes/fill-forms'
 import { Route as ImagesToPdfRouteImport } from './routes/images-to-pdf'
 import { Route as MergeRouteImport } from './routes/merge'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const CompressRoute = CompressRouteImport.update({
   id: '/compress',
   path: '/compress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DigitalSignRoute = DigitalSignRouteImport.update({
+  id: '/digital-sign',
+  path: '/digital-sign',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FillFormsRoute = FillFormsRouteImport.update({
@@ -92,6 +98,7 @@ const WatermarkRoute = WatermarkRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compress': typeof CompressRoute
+  '/digital-sign': typeof DigitalSignRoute
   '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compress': typeof CompressRoute
+  '/digital-sign': typeof DigitalSignRoute
   '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/compress': typeof CompressRoute
+  '/digital-sign': typeof DigitalSignRoute
   '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/compress'
+    | '/digital-sign'
     | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/compress'
+    | '/digital-sign'
     | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/compress'
+    | '/digital-sign'
     | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompressRoute: typeof CompressRoute
+  DigitalSignRoute: typeof DigitalSignRoute
   FillFormsRoute: typeof FillFormsRoute
   ImagesToPdfRoute: typeof ImagesToPdfRoute
   MergeRoute: typeof MergeRoute
@@ -213,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/compress'
       fullPath: '/compress'
       preLoaderRoute: typeof CompressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/digital-sign': {
+      id: '/digital-sign'
+      path: '/digital-sign'
+      fullPath: '/digital-sign'
+      preLoaderRoute: typeof DigitalSignRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fill-forms': {
@@ -298,6 +318,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompressRoute: CompressRoute,
+  DigitalSignRoute: DigitalSignRoute,
   FillFormsRoute: FillFormsRoute,
   ImagesToPdfRoute: ImagesToPdfRoute,
   MergeRoute: MergeRoute,
