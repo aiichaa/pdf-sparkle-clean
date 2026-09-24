@@ -1,6 +1,14 @@
 // Single source of truth for the tool catalogue (home grid, routes, page titles).
 export type ToolSlug =
-  "merge" | "split" | "organize" | "images-to-pdf" | "pdf-to-images" | "page-numbers" | "watermark";
+  | "merge"
+  | "split"
+  | "organize"
+  | "images-to-pdf"
+  | "pdf-to-images"
+  | "page-numbers"
+  | "watermark"
+  | "protect"
+  | "unlock";
 
 export interface ToolInfo {
   slug: ToolSlug;
@@ -52,6 +60,18 @@ export const TOOLS: ToolInfo[] = [
     title: "Add watermark",
     description: "Stamp text like CONFIDENTIAL or DRAFT across every page.",
     action: "Add watermark",
+  },
+  {
+    slug: "protect",
+    title: "Protect PDF",
+    description: "Add a password with AES-256 encryption, and optional restrictions.",
+    action: "Protect PDF",
+  },
+  {
+    slug: "unlock",
+    title: "Unlock PDF",
+    description: "Remove the password from a PDF you can open.",
+    action: "Unlock PDF",
   },
 ];
 

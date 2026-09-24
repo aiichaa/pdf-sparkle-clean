@@ -15,7 +15,9 @@ import { Route as MergeRouteImport } from './routes/merge'
 import { Route as OrganizeRouteImport } from './routes/organize'
 import { Route as PageNumbersRouteImport } from './routes/page-numbers'
 import { Route as PdfToImagesRouteImport } from './routes/pdf-to-images'
+import { Route as ProtectRouteImport } from './routes/protect'
 import { Route as SplitRouteImport } from './routes/split'
+import { Route as UnlockRouteImport } from './routes/unlock'
 import { Route as WatermarkRouteImport } from './routes/watermark'
 
 const IndexRoute = IndexRouteImport.update({
@@ -48,9 +50,19 @@ const PdfToImagesRoute = PdfToImagesRouteImport.update({
   path: '/pdf-to-images',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectRoute = ProtectRouteImport.update({
+  id: '/protect',
+  path: '/protect',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SplitRoute = SplitRouteImport.update({
   id: '/split',
   path: '/split',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnlockRoute = UnlockRouteImport.update({
+  id: '/unlock',
+  path: '/unlock',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WatermarkRoute = WatermarkRouteImport.update({
@@ -66,7 +78,9 @@ export interface FileRoutesByFullPath {
   '/organize': typeof OrganizeRoute
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
+  '/protect': typeof ProtectRoute
   '/split': typeof SplitRoute
+  '/unlock': typeof UnlockRoute
   '/watermark': typeof WatermarkRoute
 }
 export interface FileRoutesByTo {
@@ -76,7 +90,9 @@ export interface FileRoutesByTo {
   '/organize': typeof OrganizeRoute
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
+  '/protect': typeof ProtectRoute
   '/split': typeof SplitRoute
+  '/unlock': typeof UnlockRoute
   '/watermark': typeof WatermarkRoute
 }
 export interface FileRoutesById {
@@ -87,7 +103,9 @@ export interface FileRoutesById {
   '/organize': typeof OrganizeRoute
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
+  '/protect': typeof ProtectRoute
   '/split': typeof SplitRoute
+  '/unlock': typeof UnlockRoute
   '/watermark': typeof WatermarkRoute
 }
 export interface FileRouteTypes {
@@ -99,7 +117,9 @@ export interface FileRouteTypes {
     | '/organize'
     | '/page-numbers'
     | '/pdf-to-images'
+    | '/protect'
     | '/split'
+    | '/unlock'
     | '/watermark'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -109,7 +129,9 @@ export interface FileRouteTypes {
     | '/organize'
     | '/page-numbers'
     | '/pdf-to-images'
+    | '/protect'
     | '/split'
+    | '/unlock'
     | '/watermark'
   id:
     | '__root__'
@@ -119,7 +141,9 @@ export interface FileRouteTypes {
     | '/organize'
     | '/page-numbers'
     | '/pdf-to-images'
+    | '/protect'
     | '/split'
+    | '/unlock'
     | '/watermark'
   fileRoutesById: FileRoutesById
 }
@@ -130,7 +154,9 @@ export interface RootRouteChildren {
   OrganizeRoute: typeof OrganizeRoute
   PageNumbersRoute: typeof PageNumbersRoute
   PdfToImagesRoute: typeof PdfToImagesRoute
+  ProtectRoute: typeof ProtectRoute
   SplitRoute: typeof SplitRoute
+  UnlockRoute: typeof UnlockRoute
   WatermarkRoute: typeof WatermarkRoute
 }
 
@@ -178,11 +204,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PdfToImagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/protect': {
+      id: '/protect'
+      path: '/protect'
+      fullPath: '/protect'
+      preLoaderRoute: typeof ProtectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/split': {
       id: '/split'
       path: '/split'
       fullPath: '/split'
       preLoaderRoute: typeof SplitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unlock': {
+      id: '/unlock'
+      path: '/unlock'
+      fullPath: '/unlock'
+      preLoaderRoute: typeof UnlockRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/watermark': {
@@ -202,7 +242,9 @@ const rootRouteChildren: RootRouteChildren = {
   OrganizeRoute: OrganizeRoute,
   PageNumbersRoute: PageNumbersRoute,
   PdfToImagesRoute: PdfToImagesRoute,
+  ProtectRoute: ProtectRoute,
   SplitRoute: SplitRoute,
+  UnlockRoute: UnlockRoute,
   WatermarkRoute: WatermarkRoute,
 }
 export const routeTree = rootRouteImport

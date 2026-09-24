@@ -3,6 +3,8 @@ import {
   Hash,
   Images,
   LayoutGrid,
+  Lock,
+  LockOpen,
   Merge,
   Split,
   Stamp,
@@ -22,6 +24,8 @@ const ICONS: Record<ToolSlug, { icon: LucideIcon; tint: string }> = {
   "pdf-to-images": { icon: FileImage, tint: "bg-sky-500/10 text-sky-600 dark:text-sky-400" },
   "page-numbers": { icon: Hash, tint: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" },
   watermark: { icon: Stamp, tint: "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400" },
+  protect: { icon: Lock, tint: "bg-slate-500/10 text-slate-700 dark:text-slate-300" },
+  unlock: { icon: LockOpen, tint: "bg-teal-500/10 text-teal-600 dark:text-teal-400" },
 };
 
 export function ToolIcon({ slug, className }: { slug: ToolSlug; className?: string }) {

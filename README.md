@@ -15,6 +15,8 @@ Live: <https://pdf.aiichaa.com>
 | **PDF to images** | Every page, or chosen pages, as PNG or JPG at 72, 150 or 300 dpi (zip for several pages) |
 | **Add page numbers** | Six positions, `1` / `1 / N` / `Page 1 of N`, start number, size, and an option to skip the cover. Stays upright on rotated pages |
 | **Add watermark** | Diagonal or horizontal text, colour, size and opacity, with a live preview |
+| **Protect PDF** | Open password with **AES-256** (PDF 2.0 standard security: `/V 5 /R 6`, AESV3), plus optional restrictions (printing, copying, editing). The owner password is random and never shown |
+| **Unlock PDF** | Remove the password from a PDF you can open, or lift "restrictions only" protection. Forms, bookmarks and metadata are kept; the password hashes are stripped from the output |
 
 Other features: light / dark theme, responsive layout, keyboard-accessible drag and drop, and a floating “Support on Ko-fi” button (a plain link to [ko-fi.com/aiichaa](https://ko-fi.com/aiichaa); no third-party script).
 
@@ -31,7 +33,7 @@ Other features: light / dark theme, responsive layout, keyboard-accessible drag 
   - 100 MB per file, 300 MB and 50 files per job;
   - 2,000 pages per document, 300 pages per PDF → images run;
   - canvas size is capped to prevent memory exhaustion.
-- **Password-protected PDFs** are detected and refused with a clear message. Unlocking is planned for Phase 2.
+- **Password-protected PDFs** are detected by the other tools, which point you to Unlock PDF. Unlock never guesses passwords. Its output is scrubbed of the encryption dictionary (the `/O /U /OE /UE` password hashes) and of the stale cross-reference stream, so the original password can't be attacked offline from the unlocked file.
 - **Nothing loads from a CDN.** The pdf.js worker, WASM decoders (JPX, JBIG2, ICC), standard fonts and CMaps are served from our own origin (`/pdfjs/…`, copied at build time), so the strict CSP holds (`connect-src 'self'`).
 - **Sanitized download filenames** (path traversal, control characters, accents).
 
@@ -72,7 +74,7 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment
 
 ## Roadmap
 
-- **Phase 2:** Compress (qpdf-wasm plus image downscaling), Protect / Unlock (password), Fill forms, Sign.
+- **Phase 2:** ~~Protect / Unlock~~ (done), Compress (lossless clean-up plus image re-encoding), Fill forms, Sign (visual signature).
 - **Not planned:** Office ↔ PDF conversion. It needs a server, which would break the “never uploaded” promise.
 
 ## Dependencies

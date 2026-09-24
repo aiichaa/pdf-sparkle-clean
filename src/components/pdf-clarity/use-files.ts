@@ -15,7 +15,7 @@ const closeDoc = (doc: PDFDocumentProxy) => void doc.loadingTask.destroy();
 function describeOpenError(name: string, e: unknown): string {
   const n = (e as { name?: string })?.name;
   if (n === "PasswordException")
-    return `${name} is password-protected. Unlocking PDFs isn't supported yet.`;
+    return `${name} is password-protected. Remove the password first with “Unlock PDF”.`;
   return `${name} couldn't be opened. It may be damaged or not a real PDF.`;
 }
 

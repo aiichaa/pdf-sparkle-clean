@@ -1,11 +1,17 @@
 // PDF editing with pdf-lib (@cantoo fork, maintained). Pure functions over bytes:
 // no DOM, no network, unit-tested in Node.
 //
-// Every operation writes a *fresh* document and copies only the pages it needs.
-// That drops document-level JavaScript (/OpenAction, /Names/JavaScript), embedded
-// files and other catalog-level baggage from the inputs.
+// Page tools (merge, split, organize, numbers, watermark…) write a *fresh* document
+// and copy only the pages they need. That drops document-level JavaScript
+// (/OpenAction, /Names/JavaScript), embedded files and other catalog baggage.
+// Protect / Unlock instead keep the *same* document (forms, bookmarks, metadata),
+// because people expect their file back, just locked or unlocked.
 import {
   PDFDocument,
+  PDFDict,
+  PDFName,
+  PDFInvalidObject,
+  PDFRef,
   EncryptedPDFError,
   StandardFonts,
   degrees,
@@ -16,7 +22,8 @@ import {
 import { MAX_PAGES } from "./limits";
 import { toWinAnsi } from "./winansi";
 
-export type PdfErrorCode = "encrypted" | "invalid" | "too-many-pages" | "empty";
+export type PdfErrorCode =
+  "encrypted" | "invalid" | "too-many-pages" | "empty" | "wrong-password" | "not-encrypted";
 
 export class PdfToolError extends Error {
   constructor(
@@ -41,7 +48,7 @@ export async function loadPdf(bytes: Uint8Array, name = "This file"): Promise<PD
     if (e instanceof EncryptedPDFError) {
       throw new PdfToolError(
         "encrypted",
-        `${name} is password-protected. Unlocking PDFs isn't supported yet.`,
+        `${name} is password-protected. Remove the password first with “Unlock PDF”.`,
       );
     }
     throw new PdfToolError(
@@ -356,4 +363,166 @@ export async function addWatermark(
 
 export async function getPageCount(bytes: Uint8Array, name?: string): Promise<number> {
   return (await loadPdf(bytes, name)).getPageCount();
+}
+
+// ── Protect (AES-256) ────────────────────────────────────────────────────────
+
+export interface ProtectOptions {
+  /** Password needed to open the file */
+  password: string;
+  allowPrinting: boolean;
+  allowCopying: boolean;
+  allowEditing: boolean;
+}
+
+/** 32 random bytes, base64url. Used as the owner password (lifts restrictions). */
+function randomSecret(): string {
+  const b = new Uint8Array(32);
+  crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+/**
+ * Encrypt with AES-256 (PDF 2.0 standard security handler, /V 5 /R 6).
+ * Restrictions are enforced by viewers, not by cryptography; only the open password
+ * actually protects the content. The owner password is random and never shown.
+ */
+export async function protectPdf(
+  bytes: Uint8Array,
+  opts: ProtectOptions,
+  name?: string,
+): Promise<Uint8Array> {
+  if (!opts.password) throw new PdfToolError("empty", "Enter a password.");
+  const doc = await loadPdf(bytes, name);
+  doc.setProducer(PRODUCER);
+  doc.encrypt({
+    userPassword: opts.password,
+    ownerPassword: randomSecret(),
+    permissions: {
+      printing: opts.allowPrinting ? "highResolution" : false,
+      copying: opts.allowCopying,
+      modifying: opts.allowEditing,
+      annotating: opts.allowEditing,
+      documentAssembly: opts.allowEditing,
+      fillingForms: true,
+      contentAccessibility: true,
+    },
+  });
+  return doc.save({ useObjectStreams: true });
+}
+
+// ── Unlock ───────────────────────────────────────────────────────────────────
+
+/** A pdf-lib document opened with a password, or null if the file isn't encrypted. */
+async function openEncrypted(
+  bytes: Uint8Array,
+  password: string,
+  name = "This file",
+): Promise<PDFDocument | null> {
+  try {
+    await PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: false });
+    return null; // opened without a password: not encrypted
+  } catch (e) {
+    if (!(e instanceof EncryptedPDFError)) {
+      throw new PdfToolError(
+        "invalid",
+        `${name} couldn't be read. It may be damaged or not a real PDF.`,
+      );
+    }
+  }
+  try {
+    return await PDFDocument.load(bytes, {
+      password,
+      updateMetadata: false,
+      throwOnInvalidObject: false,
+    });
+  } catch (e) {
+    if (/password/i.test((e as Error)?.message ?? "")) {
+      throw new PdfToolError("wrong-password", "That password isn't correct.");
+    }
+    throw new PdfToolError("invalid", `${name} couldn't be decrypted. It may be damaged.`);
+  }
+}
+
+const INFO_KEYS = [
+  "Title",
+  "Author",
+  "Subject",
+  "Keywords",
+  "Creator",
+  "Producer",
+  "CreationDate",
+  "ModDate",
+];
+
+/**
+ * After decryption pdf-lib keeps some leftovers that must not reach the output:
+ *  - the encryption dictionary, which holds the password hashes (/O /U /OE /UE):
+ *    shipping those in an "unlocked" file would allow offline cracking of the
+ *    original — often reused — password;
+ *  - the original cross-reference stream, which can't be parsed once decrypted and
+ *    still says "/Encrypt" (the file would claim to be encrypted);
+ * and it may lose the pointer to the document info (title, author), which we restore.
+ */
+function scrubDecrypted(doc: PDFDocument) {
+  const ctx = doc.context;
+  const latin1 = new TextDecoder("latin1");
+  let infoCandidate: { ref: PDFRef; score: number } | null = null;
+  for (const [ref, obj] of ctx.enumerateIndirectObjects()) {
+    if (obj instanceof PDFInvalidObject) {
+      const raw = latin1.decode((obj as unknown as { data?: Uint8Array }).data ?? new Uint8Array());
+      if (raw.includes("/XRef") || raw.includes("/Encrypt")) ctx.delete(ref);
+      continue;
+    }
+    if (!(obj instanceof PDFDict)) continue;
+    const isSecurity =
+      obj.has(PDFName.of("U")) &&
+      obj.has(PDFName.of("O")) &&
+      obj.get(PDFName.of("Filter"))?.toString() === "/Standard";
+    if (isSecurity) {
+      ctx.delete(ref);
+      continue;
+    }
+    const keys = obj.keys().map((k) => k.toString().slice(1));
+    if (!keys.includes("Type") && keys.length && keys.every((k) => INFO_KEYS.includes(k))) {
+      if (!infoCandidate || keys.length > infoCandidate.score)
+        infoCandidate = { ref, score: keys.length };
+    }
+  }
+  delete ctx.trailerInfo.Encrypt;
+  if (!ctx.trailerInfo.Info && infoCandidate) ctx.trailerInfo.Info = infoCandidate.ref;
+}
+
+/**
+ * Remove the password from a PDF the user can open. With an empty password this
+ * also lifts "restrictions only" protection (files that open freely but block
+ * printing/copying). Keeps forms, bookmarks and metadata.
+ */
+export async function unlockPdf(
+  bytes: Uint8Array,
+  password: string,
+  name?: string,
+): Promise<Uint8Array> {
+  const doc = await openEncrypted(bytes, password, name);
+  if (!doc)
+    throw new PdfToolError("not-encrypted", `${name ?? "This file"} isn't password-protected.`);
+  scrubDecrypted(doc);
+  return doc.save({ useObjectStreams: true });
+}
+
+/** "open" = needs a password to open; "restrictions" = opens freely but is locked down. */
+export async function encryptionKind(
+  bytes: Uint8Array,
+  name?: string,
+): Promise<"none" | "restrictions" | "open"> {
+  try {
+    const doc = await openEncrypted(bytes, "", name);
+    return doc ? "restrictions" : "none";
+  } catch (e) {
+    if (e instanceof PdfToolError && e.code === "wrong-password") return "open";
+    throw e;
+  }
 }

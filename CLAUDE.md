@@ -24,10 +24,12 @@ Bun is not installed on the host. Run it through Docker:
 
 ## Architecture
 
-- **Routes** (`src/routes/`): `/` shows the tool grid; `/merge`, `/split`, `/organize`, `/images-to-pdf`, `/pdf-to-images`, `/page-numbers` and `/watermark` are the tools. Each route sets its own `<head>` via `lib/pdf/seo.ts`. `__root.tsx` wraps every route in `AppShell` (header, footer, theme, Ko-fi button, toaster).
+- **Routes** (`src/routes/`): `/` shows the tool grid; `/merge`, `/split`, `/organize`, `/images-to-pdf`, `/pdf-to-images`, `/page-numbers`, `/watermark`, `/protect` and `/unlock` are the tools. `UnlockTool` doesn't use pdf.js, since encrypted files can't be previewed without the password. Each route sets its own `<head>` via `lib/pdf/seo.ts`. `__root.tsx` wraps every route in `AppShell` (header, footer, theme, Ko-fi button, toaster).
 - **Tool catalogue** `src/lib/pdf/tools.ts`: the single source for titles, descriptions and button labels.
 - **Lib** `src/lib/pdf/`:
-  - `ops.ts`: **pure** pdf-lib operations (merge, split, organize, imagesToPdf, addPageNumbers, addWatermark), unit-tested. Every op builds a **new** document and `copyPages` into it, which strips document-level JS, `/OpenAction` and attachments. `visualToUser()` maps "as displayed" coordinates onto pages with `/Rotate`, so stamped text stays upright.
+  - `ops.ts`: **pure** pdf-lib operations (merge, split, organize, imagesToPdf, addPageNumbers, addWatermark, protectPdf, unlockPdf, encryptionKind), unit-tested.
+    - **Protect/Unlock keep the same document** (forms, outlines, metadata) instead of copying pages. `protectPdf` uses the fork's default **AES-256** (`/V 5 /R 6`) with a random owner password. RC4 is never enabled.
+    - `unlockPdf` must call `scrubDecrypted()`. After a decrypting load, pdf-lib keeps the encryption dict (password hashes) and the original xref stream as a `PDFInvalidObject` that still says `/Encrypt`, and it can lose the `/Info` pointer. Without the scrub, the output claims to be encrypted and leaks hashes. Every op builds a **new** document and `copyPages` into it, which strips document-level JS, `/OpenAction` and attachments. `visualToUser()` maps "as displayed" coordinates onto pages with `/Rotate`, so stamped text stays upright.
   - `render.ts`: pdf.js (browser only; always `import()` it dynamically). Canvas rendering only. `openDocument` passes `bytes.slice()`, because pdf.js detaches the buffer it's given.
   - `files.ts`: magic-byte sniffing plus size and count limits. `limits.ts`: all guardrails. `ranges.ts`: `1-3, 5, 8-` parser. `images.ts`: EXIF orientation and re-encode to PNG/JPEG. `winansi.ts`: text mapping for the standard fonts. `download.ts`: filename sanitizing and zip (fflate).
 - **Components** `src/components/pdf-clarity/`:
