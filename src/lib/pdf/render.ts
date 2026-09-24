@@ -38,11 +38,31 @@ function safeScale(page: PDFPageProxy, scale: number, rotation: number): number 
   return Math.min(scale, maxScale);
 }
 
+// pdf.js refuses two concurrent render() calls on the same canvas. Components can
+// re-render quickly (resize, rotate twice…), so renders are queued per canvas.
+const canvasQueue = new WeakMap<HTMLCanvasElement, Promise<void>>();
+
 /**
  * Paint a page into `canvas` at `cssWidth` CSS pixels wide (sharp on HiDPI).
- * `extraRotation` is added to the page's own /Rotate.
+ * `extraRotation` is added to the page's own /Rotate. Calls on the same canvas run
+ * one after another; the last one wins.
  */
-export async function renderThumbnail(
+export function renderThumbnail(
+  doc: PDFDocumentProxy,
+  pageNumber: number,
+  canvas: HTMLCanvasElement,
+  cssWidth: number,
+  extraRotation = 0,
+): Promise<void> {
+  const prev = canvasQueue.get(canvas) ?? Promise.resolve();
+  const next = prev
+    .catch(() => {})
+    .then(() => paintPage(doc, pageNumber, canvas, cssWidth, extraRotation));
+  canvasQueue.set(canvas, next);
+  return next;
+}
+
+async function paintPage(
   doc: PDFDocumentProxy,
   pageNumber: number,
   canvas: HTMLCanvasElement,

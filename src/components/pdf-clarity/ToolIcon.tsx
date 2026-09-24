@@ -8,6 +8,7 @@ import {
   LockOpen,
   Merge,
   Shrink,
+  Signature,
   Split,
   Stamp,
   type LucideIcon,
@@ -28,6 +29,7 @@ const ICONS: Record<ToolSlug, { icon: LucideIcon; tint: string }> = {
   watermark: { icon: Stamp, tint: "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400" },
   compress: { icon: Shrink, tint: "bg-lime-500/10 text-lime-700 dark:text-lime-400" },
   "fill-forms": { icon: FormInput, tint: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400" },
+  sign: { icon: Signature, tint: "bg-violet-500/10 text-violet-700 dark:text-violet-400" },
   protect: { icon: Lock, tint: "bg-slate-500/10 text-slate-700 dark:text-slate-300" },
   unlock: { icon: LockOpen, tint: "bg-teal-500/10 text-teal-600 dark:text-teal-400" },
 };

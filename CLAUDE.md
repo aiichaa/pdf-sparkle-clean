@@ -41,6 +41,12 @@ Bun is not installed on the host. Run it through Docker:
   - `readForm` loads with `preserveXFA: true` (to detect XFA) and returns fields with their widget page and rect. `fillForm` loads normally, which strips XFA so every reader shows the AcroForm values. Read-only fields are never written.
   - `needsReadableSize()` sets multiline fields to 10pt when their DA size is auto (0) or baked above 24pt. Otherwise pdf-lib renders one giant word.
   - UI: `FormPage` draws a page plus field outlines using `viewport.convertToViewportPoint` (correct with `/Rotate`). The boxes are memoised per form so typing doesn't re-render the canvases.
+- **Sign** `src/lib/pdf/sign.ts` (pure) + `signature-browser.ts`:
+  - `Placement` is stored in **visual page points with a top-left origin**. `placementToUser()` converts it with `visualToUser` and draws with `rotate = page rotation`, so the signature is upright on rotated pages.
+  - The signature is a trimmed transparent PNG, embedded once and drawn per placement.
+  - Previews use `data:` URLs, which CSP `img-src` allows. The handwriting fonts load as same-origin woff2 through `FontFace`.
+  - **Never persist the signature** (no localStorage).
+- **Rendering queue:** `renderThumbnail` serialises renders per canvas (a WeakMap chain). pdf.js throws if two `render()` calls hit the same canvas, which happened when a ResizeObserver re-rendered during the first paint. Keep all page painting going through it.
 - **Components** `src/components/pdf-clarity/`:
   - `ToolFrame`: the tool header, plus a sidebar with options and the primary action.
   - `FileDrop`, `Thumbnails` (`PageThumb`, `ImageThumb`: lazy canvas rendering), `SortableGrid` (dnd-kit with readable announcements), `controls` (`Segmented`, `Field`).

@@ -18,6 +18,7 @@ import { Route as OrganizeRouteImport } from './routes/organize'
 import { Route as PageNumbersRouteImport } from './routes/page-numbers'
 import { Route as PdfToImagesRouteImport } from './routes/pdf-to-images'
 import { Route as ProtectRouteImport } from './routes/protect'
+import { Route as SignRouteImport } from './routes/sign'
 import { Route as SplitRouteImport } from './routes/split'
 import { Route as UnlockRouteImport } from './routes/unlock'
 import { Route as WatermarkRouteImport } from './routes/watermark'
@@ -67,6 +68,11 @@ const ProtectRoute = ProtectRouteImport.update({
   path: '/protect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignRoute = SignRouteImport.update({
+  id: '/sign',
+  path: '/sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SplitRoute = SplitRouteImport.update({
   id: '/split',
   path: '/split',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
   '/protect': typeof ProtectRoute
+  '/sign': typeof SignRoute
   '/split': typeof SplitRoute
   '/unlock': typeof UnlockRoute
   '/watermark': typeof WatermarkRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
   '/protect': typeof ProtectRoute
+  '/sign': typeof SignRoute
   '/split': typeof SplitRoute
   '/unlock': typeof UnlockRoute
   '/watermark': typeof WatermarkRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
   '/protect': typeof ProtectRoute
+  '/sign': typeof SignRoute
   '/split': typeof SplitRoute
   '/unlock': typeof UnlockRoute
   '/watermark': typeof WatermarkRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/page-numbers'
     | '/pdf-to-images'
     | '/protect'
+    | '/sign'
     | '/split'
     | '/unlock'
     | '/watermark'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/page-numbers'
     | '/pdf-to-images'
     | '/protect'
+    | '/sign'
     | '/split'
     | '/unlock'
     | '/watermark'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/page-numbers'
     | '/pdf-to-images'
     | '/protect'
+    | '/sign'
     | '/split'
     | '/unlock'
     | '/watermark'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   PageNumbersRoute: typeof PageNumbersRoute
   PdfToImagesRoute: typeof PdfToImagesRoute
   ProtectRoute: typeof ProtectRoute
+  SignRoute: typeof SignRoute
   SplitRoute: typeof SplitRoute
   UnlockRoute: typeof UnlockRoute
   WatermarkRoute: typeof WatermarkRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign': {
+      id: '/sign'
+      path: '/sign'
+      fullPath: '/sign'
+      preLoaderRoute: typeof SignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/split': {
       id: '/split'
       path: '/split'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   PageNumbersRoute: PageNumbersRoute,
   PdfToImagesRoute: PdfToImagesRoute,
   ProtectRoute: ProtectRoute,
+  SignRoute: SignRoute,
   SplitRoute: SplitRoute,
   UnlockRoute: UnlockRoute,
   WatermarkRoute: WatermarkRoute,
