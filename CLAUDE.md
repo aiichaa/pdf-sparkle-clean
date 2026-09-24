@@ -32,6 +32,11 @@ Bun is not installed on the host. Run it through Docker:
     - `unlockPdf` must call `scrubDecrypted()`. After a decrypting load, pdf-lib keeps the encryption dict (password hashes) and the original xref stream as a `PDFInvalidObject` that still says `/Encrypt`, and it can lose the `/Info` pointer. Without the scrub, the output claims to be encrypted and leaks hashes. Every op builds a **new** document and `copyPages` into it, which strips document-level JS, `/OpenAction` and attachments. `visualToUser()` maps "as displayed" coordinates onto pages with `/Rotate`, so stamped text stays upright.
   - `render.ts`: pdf.js (browser only; always `import()` it dynamically). Canvas rendering only. `openDocument` passes `bytes.slice()`, because pdf.js detaches the buffer it's given.
   - `files.ts`: magic-byte sniffing plus size and count limits. `limits.ts`: all guardrails. `ranges.ts`: `1-3, 5, 8-` parser. `images.ts`: EXIF orientation and re-encode to PNG/JPEG. `winansi.ts`: text mapping for the standard fonts. `download.ts`: filename sanitizing and zip (fflate).
+- **Compression** `src/lib/pdf/compress.ts` + `compress-browser.ts`:
+  - `compressPdf(bytes, level, encoder)` edits the same document in place: it re-encodes image XObjects through an injected `ImageEncoder` (canvas in the browser, a fake in tests), then runs `removeUnreferenced` (a reachability sweep from Root/Info) and `deflateUncompressedStreams`.
+  - An image is replaced only if the result is ≥10% smaller. After replacing, the dictionary is rewritten: `DCTDecode`, `DeviceRGB`, 8 bpc, new Width/Height, `DecodeParms` removed.
+  - The candidate filter (`imageCandidate`) is the safety net. Keep it strict: RGB/Gray-family colour spaces only, no `/Decode`, `/Mask` or stencil masks, a single DCT or Flate (8 bpc, PNG predictors 10–15) filter, and at most 40 MP.
+  - The browser encoder must keep `imageOrientation: "none"` and `colorSpaceConversion: "none"`.
 - **Components** `src/components/pdf-clarity/`:
   - `ToolFrame`: the tool header, plus a sidebar with options and the primary action.
   - `FileDrop`, `Thumbnails` (`PageThumb`, `ImageThumb`: lazy canvas rendering), `SortableGrid` (dnd-kit with readable announcements), `controls` (`Segmented`, `Field`).

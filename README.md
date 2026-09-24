@@ -15,6 +15,7 @@ Live: <https://pdf.aiichaa.com>
 | **PDF to images** | Every page, or chosen pages, as PNG or JPG at 72, 150 or 300 dpi (zip for several pages) |
 | **Add page numbers** | Six positions, `1` / `1 / N` / `Page 1 of N`, start number, size, and an option to skip the cover. Stays upright on rotated pages |
 | **Add watermark** | Diagonal or horizontal text, colour, size and opacity, with a live preview |
+| **Compress PDF** | Three levels: **Recommended** (images capped at 2000 px, JPEG q75), **Strong** (1400 px, q60) and **Lossless**. It always removes unreferenced objects, deflates uncompressed streams and uses object streams. The file only downloads if it actually got smaller |
 | **Protect PDF** | Open password with **AES-256** (PDF 2.0 standard security: `/V 5 /R 6`, AESV3), plus optional restrictions (printing, copying, editing). The owner password is random and never shown |
 | **Unlock PDF** | Remove the password from a PDF you can open, or lift "restrictions only" protection. Forms, bookmarks and metadata are kept; the password hashes are stripped from the output |
 
@@ -28,7 +29,8 @@ Other features: light / dark theme, responsive layout, keyboard-accessible drag 
 - **Hostile PDFs are handled safely.**
   - pdf.js 6 paints pages to `<canvas>` only. There is no text or annotation layer, and XFA is off.
   - The JavaScript sandbox (`quickjs`) isn't shipped, so scripts inside PDFs never run.
-  - Every output is a new document containing only the copied pages. That drops document-level JavaScript (`/OpenAction`), embedded files and other catalog baggage from the inputs.
+  - The page tools (merge, split, organize, numbers, watermark…) build a new document containing only the copied pages. That drops document-level JavaScript (`/OpenAction`), embedded files and other catalog baggage from the inputs. Protect, Unlock and Compress deliberately keep the same document (forms, bookmarks, metadata).
+  - Compress never re-encodes images it can't reproduce faithfully: CMYK / Lab / Indexed / DeviceN colour, `/Decode` arrays, masks, JPEG 2000, JBIG2 and 16-bit images are left untouched. EXIF orientation and embedded JPEG colour profiles are ignored when decoding, just as PDF viewers ignore them.
 - **Limits:**
   - 100 MB per file, 300 MB and 50 files per job;
   - 2,000 pages per document, 300 pages per PDF → images run;
@@ -74,7 +76,7 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment
 
 ## Roadmap
 
-- **Phase 2:** ~~Protect / Unlock~~ (done), Compress (lossless clean-up plus image re-encoding), Fill forms, Sign (visual signature).
+- **Phase 2:** ~~Protect / Unlock~~, ~~Compress~~ (done), Fill forms, Sign (visual signature).
 - **Not planned:** Office ↔ PDF conversion. It needs a server, which would break the “never uploaded” promise.
 
 ## Dependencies

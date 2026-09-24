@@ -8,7 +8,8 @@ export type ToolSlug =
   | "page-numbers"
   | "watermark"
   | "protect"
-  | "unlock";
+  | "unlock"
+  | "compress";
 
 export interface ToolInfo {
   slug: ToolSlug;
@@ -60,6 +61,12 @@ export const TOOLS: ToolInfo[] = [
     title: "Add watermark",
     description: "Stamp text like CONFIDENTIAL or DRAFT across every page.",
     action: "Add watermark",
+  },
+  {
+    slug: "compress",
+    title: "Compress PDF",
+    description: "Make PDFs smaller by optimizing images and removing leftover data.",
+    action: "Compress PDF",
   },
   {
     slug: "protect",
