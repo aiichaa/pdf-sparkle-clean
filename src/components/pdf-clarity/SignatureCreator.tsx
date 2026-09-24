@@ -66,9 +66,34 @@ export function SignatureCreator({ onDone }: { onDone: (s: Signature) => void })
   );
 }
 
+type Pt = { x: number; y: number; w: number };
+
+/** Paint the segment ending at point `i` of a stroke (dot for the first points). */
+function paintSegment(ctx: CanvasRenderingContext2D, pts: Pt[], i: number, color: string) {
+  const p = pts[i];
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = p.w;
+  if (i < 2) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.w / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  // quadratic curve through the midpoints = smooth strokes
+  const [a, b, c] = [pts[i - 2], pts[i - 1], p];
+  ctx.beginPath();
+  ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+  ctx.quadraticCurveTo(b.x, b.y, (b.x + c.x) / 2, (b.y + c.y) / 2);
+  ctx.stroke();
+}
+
 function DrawPad({ color, onDone }: { color: string; onDone: (s: Signature) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const drawing = useRef<{ x: number; y: number }[] | null>(null);
+  // Strokes are kept as data (not just pixels) so changing the ink recolours
+  // everything already drawn.
+  const strokes = useRef<Pt[][]>([]);
+  const drawing = useRef<Pt[] | null>(null);
   const [empty, setEmpty] = useState(true);
 
   const setup = useCallback(() => {
@@ -82,6 +107,7 @@ function DrawPad({ color, onDone }: { color: string; onDone: (s: Signature) => v
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+    strokes.current = [];
     setEmpty(true);
   }, []);
 
@@ -89,41 +115,39 @@ function DrawPad({ color, onDone }: { color: string; onDone: (s: Signature) => v
     setup();
   }, [setup]);
 
-  const point = (e: React.PointerEvent) => {
+  // Ink changed: repaint every stroke in the new colour.
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c || !strokes.current.length) return;
+    const ctx = c.getContext("2d")!;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.restore();
+    for (const st of strokes.current)
+      for (let i = 0; i < st.length; i++) paintSegment(ctx, st, i, color);
+  }, [color]);
+
+  const point = (e: React.PointerEvent): Pt => {
     const r = canvasRef.current!.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    // pressure-ish width: pens report pressure, mice report 0.5
+    return { x: e.clientX - r.left, y: e.clientY - r.top, w: 1.6 + (e.pressure || 0.5) * 2.2 };
   };
 
   const onDown = (e: React.PointerEvent) => {
     e.preventDefault();
     canvasRef.current!.setPointerCapture(e.pointerId);
-    drawing.current = [point(e)];
+    const stroke = [point(e)];
+    strokes.current.push(stroke);
+    drawing.current = stroke;
+    paintSegment(canvasRef.current!.getContext("2d")!, stroke, 0, color);
+    setEmpty(false);
   };
   const onMove = (e: React.PointerEvent) => {
     const pts = drawing.current;
     if (!pts) return;
-    const p = point(e);
-    pts.push(p);
-    const ctx = canvasRef.current!.getContext("2d")!;
-    ctx.strokeStyle = color;
-    // pressure-ish width: pens report pressure, mice report 0.5
-    ctx.lineWidth = 1.6 + (e.pressure || 0.5) * 2.2;
-    const n = pts.length;
-    if (n < 3) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, ctx.lineWidth / 2, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      setEmpty(false);
-      return;
-    }
-    // quadratic curve through the midpoints = smooth strokes
-    const [a, b, c] = [pts[n - 3], pts[n - 2], pts[n - 1]];
-    ctx.beginPath();
-    ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
-    ctx.quadraticCurveTo(b.x, b.y, (b.x + c.x) / 2, (b.y + c.y) / 2);
-    ctx.stroke();
-    setEmpty(false);
+    pts.push(point(e));
+    paintSegment(canvasRef.current!.getContext("2d")!, pts, pts.length - 1, color);
   };
   const onUp = () => {
     drawing.current = null;
