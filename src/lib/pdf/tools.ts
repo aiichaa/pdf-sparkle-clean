@@ -10,6 +10,7 @@ export type ToolSlug =
   | "protect"
   | "unlock"
   | "compress"
+  | "ocr"
   | "fill-forms"
   | "sign"
   | "digital-sign";
@@ -70,6 +71,13 @@ export const TOOLS: ToolInfo[] = [
     title: "Compress PDF",
     description: "Make PDFs smaller by optimizing images and removing leftover data.",
     action: "Compress PDF",
+  },
+  {
+    slug: "ocr",
+    title: "OCR: make searchable",
+    description:
+      "Turn scanned pages into searchable, selectable text (English, French, Spanish, German).",
+    action: "Make searchable",
   },
   {
     slug: "fill-forms",

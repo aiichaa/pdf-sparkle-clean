@@ -33,3 +33,4 @@ dist-ssr
 
 # pdf.js runtime assets, copied from node_modules at build time
 public/pdfjs/
+public/tesseract/

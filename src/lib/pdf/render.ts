@@ -2,7 +2,7 @@
 // Import this module dynamically from components so SSR never loads pdf.js.
 //
 // Hardening: pages are only ever painted to <canvas>. We never build a text or
-// annotation layer, never run embedded JavaScript (the scripting sandbox isn't
+// annotation layer (pageHasText only counts characters), never run embedded JavaScript (the scripting sandbox isn't
 // shipped) and XFA forms are off. Worker, WASM decoders and fonts come from our own
 // origin (see scripts/copy-pdfjs-assets.mjs).
 import * as pdfjs from "pdfjs-dist";
@@ -85,14 +85,16 @@ async function paintPage(
 
 export type ImageFormat = "png" | "jpeg";
 
-/** Render one page to an image blob at the given DPI. */
-export async function renderPageToImage(
+/**
+ * Render a page (as displayed, /Rotate applied) onto a new canvas at the given DPI.
+ * With `white`, the background is painted white first (JPEG, OCR).
+ */
+export async function renderPageToCanvas(
   doc: PDFDocumentProxy,
   pageNumber: number,
   dpi: number,
-  format: ImageFormat,
-  quality = 0.9,
-): Promise<Blob> {
+  white: boolean,
+): Promise<HTMLCanvasElement> {
   const page = await doc.getPage(pageNumber);
   const scale = safeScale(page, dpi / 72, page.rotate);
   const viewport = page.getViewport({ scale, rotation: page.rotate });
@@ -101,13 +103,37 @@ export async function renderPageToImage(
   canvas.height = Math.floor(viewport.height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas unavailable");
-  if (format === "jpeg") {
-    // JPEG has no transparency: paint white first so empty areas aren't black.
+  if (white) {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   await page.render({ canvas, viewport }).promise;
   page.cleanup();
+  return canvas;
+}
+
+/** Whether a page already has real (extractable) text, i.e. it isn't just a scan. */
+export async function pageHasText(doc: PDFDocumentProxy, pageNumber: number): Promise<boolean> {
+  const page = await doc.getPage(pageNumber);
+  const content = await page.getTextContent();
+  const chars = content.items.reduce(
+    (n, it) => n + ("str" in it ? it.str.replace(/\s+/g, "").length : 0),
+    0,
+  );
+  page.cleanup();
+  return chars >= 20;
+}
+
+/** Render one page to an image blob at the given DPI. */
+export async function renderPageToImage(
+  doc: PDFDocumentProxy,
+  pageNumber: number,
+  dpi: number,
+  format: ImageFormat,
+  quality = 0.9,
+): Promise<Blob> {
+  // JPEG has no transparency: paint white first so empty areas aren't black.
+  const canvas = await renderPageToCanvas(doc, pageNumber, dpi, format === "jpeg");
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, format === "png" ? "image/png" : "image/jpeg", quality),
   );

@@ -24,7 +24,7 @@ Bun is not installed on the host. Run it through Docker:
 
 ## Architecture
 
-- **Routes** (`src/routes/`): `/` shows the tool grid; `/merge`, `/split`, `/organize`, `/images-to-pdf`, `/pdf-to-images`, `/page-numbers`, `/watermark`, `/compress`, `/fill-forms`, `/sign`, `/digital-sign`, `/protect` and `/unlock` are the tools. `UnlockTool` doesn't use pdf.js, since encrypted files can't be previewed without the password. Each route sets its own `<head>` via `lib/pdf/seo.ts`. `__root.tsx` wraps every route in `AppShell` (header, footer, theme, Ko-fi button, toaster).
+- **Routes** (`src/routes/`): `/` shows the tool grid; `/merge`, `/split`, `/organize`, `/images-to-pdf`, `/pdf-to-images`, `/page-numbers`, `/watermark`, `/compress`, `/fill-forms`, `/ocr`, `/sign`, `/digital-sign`, `/protect` and `/unlock` are the tools. `UnlockTool` doesn't use pdf.js, since encrypted files can't be previewed without the password. Each route sets its own `<head>` via `lib/pdf/seo.ts`. `__root.tsx` wraps every route in `AppShell` (header, footer, theme, Ko-fi button, toaster).
 - **Tool catalogue** `src/lib/pdf/tools.ts`: the single source for titles, descriptions and button labels.
 - **Lib** `src/lib/pdf/`:
   - `ops.ts`: **pure** pdf-lib operations (merge, split, organize, imagesToPdf, addPageNumbers, addWatermark, protectPdf, unlockPdf, encryptionKind), unit-tested.
@@ -52,6 +52,12 @@ Bun is not installed on the host. Run it through Docker:
   - **UTF-8 names:** forge parses UTF8String values as raw bytes but re-encodes them when it rebuilds a name (the signer's issuerAndSerialNumber). `normalizeNames()` decodes them once. Without it, an accented CN (e.g. "Aïcha") gives an invalid signature. Tests check the issuer bytes.
   - Tests use OpenSSL-made `.p12` fixtures (`__tests__/p12-fixtures.ts`, password `test123`) and verify byte ranges, digest, RSA signature and issuer bytes independently. The e2e is checked with poppler `pdfsig`.
   - **Never persist the certificate, key or password.**
+- **OCR** `src/lib/pdf/ocr.ts` (pure, `addTextLayer`) + `ocr-browser.ts` (tesseract.js):
+  - Assets live in `public/tesseract/` (git-ignored, copied by `scripts/copy-pdfjs-assets.mjs`): `worker.min.js`, only the three `*-lstm.wasm.js` cores (we always use `OEM.LSTM_ONLY`) and `lang/<lang>.traineddata.gz` (4.0.0_best_int). Settings: `workerBlobURL: false`, `cacheMethod: "none"` (no IndexedDB) and `gzip: true`. It's imported from `tesseract.js/dist/tesseract.esm.min.js` (typed in `tesseract-esm.d.ts`). ESLint and Prettier ignore `public/tesseract`, because linting the 4 MB cores hangs.
+  - Pages are rendered with `renderPageToCanvas` at 300 DPI (visual frame). Words are kept if confidence ≥ 40 and they contain a letter or digit (symbols need ≥ 85).
+  - Layer: the existing content is wrapped in `q … Q` (`wrapContentStreams`), then one `BT` per line in `3 Tr`. All words of a line share the size (ascender height / 0.72) and the baseline (tesseract's baseline segment, with skew). Each word is `Tz`-stretched to its box, followed by a real space. Shared lines are what keep pdftotext reading order; per-word sizes scrambled it.
+  - `worker.terminate()` leaves a pending `recognize()` unsettled, so every await in `recognizeDocument` races the abort signal (`cancellable`).
+  - Unit tests check placement with poppler `pdftotext -bbox` on all four rotations. They are skipped in the bun container, which has no poppler; run them on the host with `node node_modules/vitest/vitest.mjs run`.
 - **Rendering queue:** `renderThumbnail` serialises renders per canvas (a WeakMap chain). pdf.js throws if two `render()` calls hit the same canvas, which happened when a ResizeObserver re-rendered during the first paint. Keep all page painting going through it.
 - **Components** `src/components/pdf-clarity/`:
   - `ToolFrame`: the tool header, plus a sidebar with options and the primary action.

@@ -15,6 +15,7 @@ import { Route as DigitalSignRouteImport } from './routes/digital-sign'
 import { Route as FillFormsRouteImport } from './routes/fill-forms'
 import { Route as ImagesToPdfRouteImport } from './routes/images-to-pdf'
 import { Route as MergeRouteImport } from './routes/merge'
+import { Route as OcrRouteImport } from './routes/ocr'
 import { Route as OrganizeRouteImport } from './routes/organize'
 import { Route as PageNumbersRouteImport } from './routes/page-numbers'
 import { Route as PdfToImagesRouteImport } from './routes/pdf-to-images'
@@ -52,6 +53,11 @@ const ImagesToPdfRoute = ImagesToPdfRouteImport.update({
 const MergeRoute = MergeRouteImport.update({
   id: '/merge',
   path: '/merge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcrRoute = OcrRouteImport.update({
+  id: '/ocr',
+  path: '/ocr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrganizeRoute = OrganizeRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
+  '/ocr': typeof OcrRoute
   '/organize': typeof OrganizeRoute
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
+  '/ocr': typeof OcrRoute
   '/organize': typeof OrganizeRoute
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/fill-forms': typeof FillFormsRoute
   '/images-to-pdf': typeof ImagesToPdfRoute
   '/merge': typeof MergeRoute
+  '/ocr': typeof OcrRoute
   '/organize': typeof OrganizeRoute
   '/page-numbers': typeof PageNumbersRoute
   '/pdf-to-images': typeof PdfToImagesRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
+    | '/ocr'
     | '/organize'
     | '/page-numbers'
     | '/pdf-to-images'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
+    | '/ocr'
     | '/organize'
     | '/page-numbers'
     | '/pdf-to-images'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/fill-forms'
     | '/images-to-pdf'
     | '/merge'
+    | '/ocr'
     | '/organize'
     | '/page-numbers'
     | '/pdf-to-images'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   FillFormsRoute: typeof FillFormsRoute
   ImagesToPdfRoute: typeof ImagesToPdfRoute
   MergeRoute: typeof MergeRoute
+  OcrRoute: typeof OcrRoute
   OrganizeRoute: typeof OrganizeRoute
   PageNumbersRoute: typeof PageNumbersRoute
   PdfToImagesRoute: typeof PdfToImagesRoute
@@ -254,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/merge'
       fullPath: '/merge'
       preLoaderRoute: typeof MergeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocr': {
+      id: '/ocr'
+      path: '/ocr'
+      fullPath: '/ocr'
+      preLoaderRoute: typeof OcrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/organize': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   FillFormsRoute: FillFormsRoute,
   ImagesToPdfRoute: ImagesToPdfRoute,
   MergeRoute: MergeRoute,
+  OcrRoute: OcrRoute,
   OrganizeRoute: OrganizeRoute,
   PageNumbersRoute: PageNumbersRoute,
   PdfToImagesRoute: PdfToImagesRoute,
