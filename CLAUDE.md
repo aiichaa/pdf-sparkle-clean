@@ -47,6 +47,7 @@ Bun is not installed on the host. Run it through Docker:
 - **Limits** live in `lib/pdf/limits.ts`. Relax them only deliberately.
 - **Ko-fi button** (`src/components/SupportButton.tsx`) is a plain link. Don't swap it for a widget script.
 - **Supply chain:** `bunfig.toml` sets `minimumReleaseAge`. `bun audit` should report 0 vulnerabilities.
+- **Network isolation.** `docker-compose.yml` gives the network a fixed bridge name (`br-<app>clarity`), which the host nftables table `inet clarity_isolation` (`/etc/nftables-clarity.nft`, loaded by `clarity-isolation.service`) matches. The container **cannot open any connection** (internet or other containers), and no other container can connect to it. Only the host (nginx via docker-proxy) reaches it. Keep the app self-contained: no outbound calls, and don't rename the network.
 
 ## Style
 

@@ -17,3 +17,11 @@ services:
       - no-new-privileges:true
     mem_limit: 256m
     pids_limit: 100
+
+# Fixed bridge name so the host firewall can isolate this public app: it may not
+# open connections to anything (internet or other containers), and no other
+# container may connect to it. See /etc/nftables-clarity.nft on the host.
+networks:
+  default:
+    driver_opts:
+      com.docker.network.bridge.name: br-pdfclarity
